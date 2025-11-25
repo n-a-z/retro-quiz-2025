@@ -1,0 +1,885 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>8-Bit Overworld Adventure</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Audiowide&family=Manrope:wght@200..800&family=Press+Start+2P&display=swap"
+      rel="stylesheet"
+    />
+
+    <style>
+      body {
+        background-color: #222;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        margin: 0;
+        font-family: "Press Start 2P", sans-serif;
+        overflow: hidden;
+      }
+
+      #game-container {
+        position: relative;
+        width: 960px;
+        height: 640px;
+        box-shadow: 0 0 20px rgba(0, 0, 0, 0.8);
+        background-color: #000;
+      }
+
+      #overworld-map {
+        width: 100%;
+        height: 100%;
+        object-fit: fill;
+        position: absolute;
+        top: 0;
+        left: 0;
+        z-index: 0;
+      }
+
+      #player {
+        position: absolute;
+        width: 40px;
+        height: 40px;
+        background-image: url("player.png");
+        background-size: contain;
+        background-repeat: no-repeat;
+        background-position: center;
+        z-index: 10;
+        transition: transform 0.1s;
+        transform: translate(-50%, -50%);
+      }
+
+      #ui-prompt {
+        position: absolute;
+        bottom: 30px;
+        left: 50%;
+        transform: translateX(-50%);
+        color: white;
+        text-shadow: 2px 2px #000;
+        font-size: 14px;
+        z-index: 20;
+        display: none;
+        animation: blink 1s infinite;
+      }
+
+      @keyframes blink {
+        50% {
+          opacity: 0;
+        }
+      }
+
+      #popup-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 100;
+        display: none;
+        justify-content: center;
+        align-items: center;
+      }
+
+      .popup-box {
+        background: #000;
+        border: 4px solid #fff;
+        padding: 20px;
+        width: 400px;
+        color: #fff;
+        text-align: center;
+        box-shadow: 5px 5px 0px rgba(0, 0, 0, 0.5);
+      }
+
+      .popup-img {
+        width: 100%;
+        height: 150px;
+        background-color: #333;
+        object-fit: contain;
+        margin-bottom: 15px;
+        border: 2px solid #fff;
+      }
+
+      .popup-title {
+        font-size: 18px;
+        margin-bottom: 10px;
+        color: #ffcc00;
+      }
+      .popup-text {
+        font-size: 12px;
+        line-height: 1.5;
+        margin-bottom: 10px; /* Reduced margin to make room for input */
+        font-family: "Press Start 2P", sans-serif;
+      }
+      .popup-text a {
+        color: inherit;
+      }
+      .popup-footer {
+        font-size: 10px;
+        color: #aaa;
+        margin-top: 10px;
+        border-top: 1px solid #333;
+        padding-top: 10px;
+      }
+
+      /* New styles for input */
+      .popup-input-group {
+        margin: 15px 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+      }
+      /* Original styling for all inputs (including the new textarea) */
+      .popup-input {
+        width: 80%;
+        padding: 8px;
+        margin-top: 5px;
+        border: 2px solid #fff;
+        background: #333;
+        color: #fff;
+        font-size: 12px;
+        font-family: "Press Start 2P", sans-serif;
+        box-sizing: border-box; /* Important for consistent sizing */
+      }
+
+      /* Specific styling for single-line inputs (Name Input) */
+      .popup-box input[type="text"] {
+        text-align: center;
+      }
+
+      /* New style for the multi-line Textarea (Questions) */
+      .popup-box textarea {
+        resize: none; /* Prevent manual resizing by the user */
+        text-align: left;
+        line-height: 1.4;
+        height: 100px; /* Give it a fixed height */
+      }
+      .popup-submit-btn {
+        margin-top: 20px;
+        padding: 10px 15px;
+        background: #ffcc00;
+        color: #000;
+        border: none;
+        font-size: 10px;
+        cursor: pointer;
+        font-family: "Press Start 2P", sans-serif;
+        box-shadow: 3px 3px 0px rgba(0, 0, 0, 0.5);
+        width: 100%;
+      }
+      .popup-submit-btn:disabled {
+        background: #666;
+        color: #333;
+        cursor: not-allowed;
+      }
+      /* Initial Name Prompt Specific Styles */
+      #initial-name-popup {
+        /* This ensures the initial popup is visible from the start */
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.9); /* Darker background to hide the game */
+        z-index: 200; /* Higher z-index than main popup (100) */
+        display: flex; /* Force it to display */
+        justify-content: center;
+        align-items: center;
+      }
+      #initial-name-popup .popup-img {
+        display: none;
+      }
+      #initial-name-popup .popup-box {
+        width: 300px;
+      }
+
+      .debug-rect {
+        position: absolute;
+        background: rgba(0, 255, 0, 0.3);
+        z-index: 5;
+        pointer-events: none;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="game-container">
+      <img id="overworld-map" src="overworld_map.png" alt="Map" />
+      <div id="player"></div>
+      <div id="ui-prompt">PRESS ENTER</div>
+
+      <div id="popup-overlay">
+        <div class="popup-box">
+          <img src="" class="popup-img" id="popup-image" />
+          <div class="popup-title" id="popup-title">Title</div>
+          <div class="popup-text" id="popup-text"></div>
+
+          <div class="popup-input-group" id="answer-input-group">
+            <label for="popup-answer" style="font-size: 10px"
+              >Your Answer:</label
+            >
+            <textarea
+              id="popup-answer"
+              class="popup-input popup-textarea"
+              rows="4"
+              placeholder="Type your answer here..."
+            ></textarea>
+          </div>
+
+          <button
+            id="submit-button"
+            class="popup-submit-btn"
+            style="display: none"
+          >
+            Submit your answers
+          </button>
+
+          <div class="popup-footer" id="popup-footer"></div>
+        </div>
+      </div>
+
+      <div id="initial-name-popup" class="popup-overlay">
+        <div class="popup-box">
+          <div class="popup-title">Hello Adventurer!</div>
+          <div class="popup-text">What is your name?</div>
+
+          <div class="popup-input-group">
+            <input
+              type="text"
+              id="player-name-input"
+              class="popup-input"
+              placeholder="Your Name"
+              maxlength="20"
+            />
+          </div>
+          <button id="start-game-button" class="popup-submit-btn">
+            START ADVENTURE
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      /* --- CONFIGURATION --- */
+      const DEBUG_MODE = true;
+      const PLAYER_SPEED = 4;
+      // ⚠️ REPLACE THIS WITH YOUR DEPLOYED GOOGLE APPS SCRIPT WEB APP URL
+      const WEB_APP_URL =
+        "https://script.google.com/macros/s/AKfycbxgtYEEbgQJBIUDZEmQQzOfGZyE5LDdTWQTKC2CVZ1EAs4HJxaoD2iX0rpJAIFtGeav/exec";
+
+      const STOPS = [
+        { id: "start", x: 120, y: 180, type: "start" },
+        {
+          id: "Q1",
+          x: 260,
+          y: 40,
+          type: "level",
+          title: "Level 1",
+          text: "What's the minimum and maximum number of squares that can create a single block / shape in Tetris",
+          img: "tetris_transparent_2.png",
+        },
+        {
+          id: "Q2",
+          x: 520,
+          y: 60,
+          type: "level",
+          title: "Level 2",
+          text: "Metroidvania is a currently a very popular genre of games. From which two classical games does it take it's name from?",
+          img: "silksong.gif",
+        },
+        {
+          id: "Q3",
+          x: 650,
+          y: 70,
+          type: "mushroom",
+          title: "Musical Zone 1",
+          text: "It is quiet here. For now... Name the game this music is from.",
+          music: "mushroom_1.mp3",
+          img: "mushroom_1.gif",
+        },
+        {
+          id: "Q4",
+          x: 790,
+          y: 210,
+          type: "level",
+          title: "Level 4",
+          text: "The term easter egg refers to a hidden message or feature in a work.<br>Which game contained the first ever video game easter egg?",
+          img: "easter_egg.gif",
+        },
+        {
+          id: "Q5",
+          x: 640,
+          y: 180,
+          type: "level",
+          title: "Level 5",
+          text: "Name at least 2 ghosts<br>from Pac-Man.",
+          img: "pac_man.gif",
+        },
+        {
+          id: "Q6",
+          x: 530,
+          y: 330,
+          type: "mushroom",
+          title: "Musical Zone 2",
+          text: "Rest your weary legs. Name the game this music is from.",
+          music: "mushroom_2.mp3",
+          img: "mushroom_2.gif",
+        },
+        {
+          id: "Q7",
+          x: 390,
+          y: 310,
+          type: "level",
+          title: "Level 7",
+          text: "Name these consoles.",
+          img: "consoles.png",
+        },
+        {
+          id: "Q8",
+          x: 260,
+          y: 580,
+          type: "level",
+          title: "Level 8",
+          text: "Who did Mario try to rescue in Donkey Kong?",
+          img: "donkey_kong.gif",
+        },
+        {
+          id: "Q9",
+          x: 520,
+          y: 560,
+          type: "mushroom",
+          title: "Musical Zone 3",
+          text: "Music fills you with DETERMINATION! Name the game this music is from.",
+          music: "mushroom_3.mp3",
+          img: "mushroom_3.gif",
+        },
+        {
+          id: "Q10", // Changed from castle_small to Q10 for sheet correlation
+          x: 380,
+          y: 435,
+          type: "castle_small",
+          title: "Final Level",
+          text: "What is the name of the legendary character who famously advertised Sega Saturn?",
+          img: "sega.gif",
+        },
+        {
+          id: "castle_big",
+          x: 780,
+          y: 435,
+          type: "castle_big",
+          title: "Congratulations!",
+          text: "You have completed the overworld adventure! Well done, brave explorer!<br><br>Level 1: 4 squares<br>Level 2: Metroid + Castlevania<br>Musical Zone 1: Tetris<br>Level 4: Adventure (Atari 2600)<br>Level 5: Pinky, Blinky, Inky and Clyde<br>Musical Zone 2: Zelda<br>Level 7: NES, SNES, Sega Genesis/MD, Game Boy<br>Level 8: Pauline<br>Musical Zone 3: Final Fantasy VII<br>Final Level: <a href='https://www.youtube.com/watch?v=6emBbKmHpB0'>Segata Sanshiro</a>",
+          img: "castle.gif",
+          music: "castle.mp3",
+          loopMusic: true,
+        },
+      ];
+
+      const ROADS = [
+        { x: 120, y: 170, w: 150, h: 40 }, // Start to coin, horizontal(-)
+        { x: 240, y: 40, w: 40, h: 150 }, // coin to 1, vertical (|)
+        { x: 250, y: 40, w: 540, h: 40 }, // 1 to end, horizontal(-)
+        { x: 760, y: 40, w: 40, h: 170 }, // coin to 4, vertical (|)
+        { x: 510, y: 170, w: 300, h: 40 }, // 4 to coin, horizontal(-)
+        { x: 510, y: 170, w: 40, h: 160 }, // coin to mushroom 2, vertical (|)
+        { x: 250, y: 300, w: 300, h: 40 }, // mushroom 2 to coin, horizontal(-)
+        { x: 250, y: 300, w: 40, h: 290 }, // coin to 8, vertical (|)
+        { x: 250, y: 550, w: 300, h: 40 }, // 8 to mushroom 3, horizontal(-)
+        { x: 510, y: 430, w: 40, h: 160 }, // mushroom 3 to bridge, vertical (|)
+        { x: 370, y: 425, w: 420, h: 40 }, // small castle to big castle, horizontal(-)
+      ];
+
+      // The exact coordinates of the barrier
+      const BRIDGE_ZONE = { x: 560, y: 395, w: 50, h: 80 };
+
+      // A larger area to trigger the UI warning when standing still
+      const BRIDGE_WARNING_ZONE = { x: 550, y: 385, w: 70, h: 100 };
+
+      /* --- STATE --- */
+      const playerState = {
+        x: 120,
+        y: 180,
+        moving: false,
+
+        // Interaction State
+        interactionTarget: null,
+        movementLocked: false,
+        showingBridgeWarning: false,
+
+        popupOpen: false,
+        visitedSmallCastle: false,
+        lastVisitedNodeId: null,
+        visitedNodes: [],
+
+        // NEW: Player data
+        playerName: "",
+        answers: {
+          Q1: "",
+          Q2: "",
+          Q3: "",
+          Q4: "",
+          Q5: "",
+          Q6: "",
+          Q7: "",
+          Q8: "",
+          Q9: "",
+          Q10: "",
+        },
+        hasSubmitted: false, // NEW: Submission status
+      };
+
+      const audio = {
+        footsteps: new Audio("footsteps.mp3"),
+        currentMusic: null,
+      };
+      audio.footsteps.loop = true;
+
+      /* --- DOM ELEMENTS --- */
+      const playerEl = document.getElementById("player");
+      const uiPrompt = document.getElementById("ui-prompt");
+      const popupOverlay = document.getElementById("popup-overlay");
+      const popupImg = document.getElementById("popup-image");
+      const popupTitle = document.getElementById("popup-title");
+      const popupText = document.getElementById("popup-text");
+      const popupFooter = document.getElementById("popup-footer");
+      const gameContainer = document.getElementById("game-container");
+
+      // NEW DOM Elements
+      const initialNamePopup = document.getElementById("initial-name-popup");
+      const playerNameInput = document.getElementById("player-name-input");
+      const startGameButton = document.getElementById("start-game-button");
+      const answerInputGroup = document.getElementById("answer-input-group");
+      const popupAnswerInput = document.getElementById("popup-answer");
+      const submitButton = document.getElementById("submit-button");
+
+      /* --- INITIALIZATION --- */
+      function init() {
+        // Start by showing the initial name input popup
+        initialNamePopup.style.display = "flex";
+        playerState.movementLocked = true;
+        updatePlayerPosition();
+        if (DEBUG_MODE) drawDebugRoads();
+        window.requestAnimationFrame(gameLoop);
+      }
+
+      /* --- INPUT --- */
+      const keys = {};
+      window.addEventListener("keydown", (e) => {
+        if (!e.key) return; // Safely exit if no key property is available
+
+        const key = e.key.toLowerCase();
+        keys[key] = true;
+
+        // 1. Handle Initial Name Popup: If it's visible, only allow ENTER to start the game and then STOP
+        if (initialNamePopup.style.display !== "none") {
+          if (key === "enter") {
+            startGameButton.click();
+          }
+          return; // Block all other input/movement processing until the game starts
+        }
+
+        // 2. Handle Game Interaction (Popup open/close/trigger)
+        // This allows interaction keys to work even when playerState.movementLocked is true
+        // (which is the case when you first arrive at a question node).
+        if (key === "enter" || key === " ") handleInteraction();
+        if (key === "escape") closePopup();
+
+        // 3. Handle Movement (Movement is processed in the game loop based on keys state)
+        // We don't need to add any more logic here, as the playerState.movementLocked
+        // check in movePlayer() handles movement restriction.
+      });
+
+      window.addEventListener("keyup", (e) => {
+        if (e.key) keys[e.key.toLowerCase()] = false;
+      });
+
+      // NEW: Event listener for starting the game
+      startGameButton.addEventListener("click", () => {
+        const name = playerNameInput.value.trim();
+        if (name) {
+          playerState.playerName = name;
+          initialNamePopup.style.display = "none";
+          playerState.movementLocked = false;
+        } else {
+          alert("Please enter your name to start the adventure!");
+        }
+      });
+
+      // NEW: Event listener for submission
+      submitButton.addEventListener("click", handleSubmitAnswers);
+
+      /* --- GAME LOOP --- */
+      function gameLoop() {
+        if (!playerState.popupOpen) {
+          movePlayer();
+          checkStops();
+        }
+        window.requestAnimationFrame(gameLoop);
+      }
+
+      /* --- MOVEMENT (Keep as is) --- */
+      function movePlayer() {
+        // Reset this flag every frame.
+        playerState.showingBridgeWarning = false;
+
+        if (playerState.movementLocked) {
+          audio.footsteps.pause();
+          return;
+        }
+
+        let dx = 0;
+        let dy = 0;
+
+        if (keys["w"] || keys["arrowup"]) dy -= PLAYER_SPEED;
+        if (keys["s"] || keys["arrowdown"]) dy += PLAYER_SPEED;
+        if (keys["a"] || keys["arrowleft"]) dx -= PLAYER_SPEED;
+        if (keys["d"] || keys["arrowright"]) dx += PLAYER_SPEED;
+
+        if (dx !== 0 || dy !== 0) {
+          playerState.moving = true;
+
+          if (dx > 0)
+            playerEl.style.transform = "translate(-50%, -50%) scaleX(1)";
+          if (dx < 0)
+            playerEl.style.transform = "translate(-50%, -50%) scaleX(-1)";
+
+          const nextX = playerState.x + dx;
+          const nextY = playerState.y + dy;
+
+          // Bridge Check (Actual Collision Zone)
+          if (
+            isInside(nextX, nextY, BRIDGE_ZONE) &&
+            !playerState.visitedSmallCastle
+          ) {
+            if (!DEBUG_MODE) {
+              // We hit the hard wall!
+              playerState.showingBridgeWarning = true; // Tell checkStops to handle the UI text
+              audio.footsteps.pause();
+              return; // Stop movement
+            }
+          }
+
+          // Valid Road Check
+          if (isValidPosition(nextX, nextY)) {
+            playerState.x = nextX;
+            playerState.y = nextY;
+            updatePlayerPosition();
+
+            if (audio.footsteps.paused) audio.footsteps.play().catch((e) => {});
+          } else {
+            playerState.moving = false;
+            audio.footsteps.pause();
+          }
+        } else {
+          playerState.moving = false;
+          audio.footsteps.pause();
+        }
+      }
+
+      function isValidPosition(x, y) {
+        for (let r of ROADS) {
+          if (x > r.x && x < r.x + r.w && y > r.y && y < r.y + r.h) return true;
+        }
+        return false;
+      }
+
+      function isInside(x, y, rect) {
+        return (
+          x > rect.x && x < rect.x + rect.w && y > rect.y && y < rect.y + rect.h
+        );
+      }
+
+      function updatePlayerPosition() {
+        playerEl.style.left = playerState.x + "px";
+        playerEl.style.top = playerState.y + "px";
+      }
+
+      /* --- INTERACTION / VISITED LOGIC (Updated to support new popups) --- */
+      function checkStops() {
+        // BRIDGE WARNING CHECK
+        if (
+          !playerState.visitedSmallCastle &&
+          isInside(playerState.x, playerState.y, BRIDGE_WARNING_ZONE)
+        ) {
+          uiPrompt.innerText = "LOCKED: Visit the Final Level first!";
+          uiPrompt.style.display = "block";
+          uiPrompt.style.color = "red";
+          return;
+        }
+
+        const proximity = 30;
+        let nearStop = null;
+
+        // 1. Detect if we are standing on a node
+        for (let stop of STOPS) {
+          const dist = Math.sqrt(
+            Math.pow(stop.x - playerState.x, 2) +
+              Math.pow(stop.y - playerState.y, 2)
+          );
+          if (dist < proximity) {
+            nearStop = stop;
+            break;
+          }
+        }
+
+        // 2. Logic for handling the node
+        if (nearStop && nearStop.id !== "start") {
+          playerState.interactionTarget = nearStop;
+
+          const isVisited = playerState.visitedNodes.includes(nearStop.id);
+          const justClosed = playerState.lastVisitedNodeId === nearStop.id;
+
+          // Only lock movement if it's the first time and not debug mode
+          if (!isVisited && !justClosed && !DEBUG_MODE) {
+            playerState.movementLocked = true;
+            audio.footsteps.pause();
+          } else {
+            playerState.movementLocked = false;
+          }
+
+          uiPrompt.innerText = "PRESS ENTER or SPACE";
+          uiPrompt.style.display = "block";
+          uiPrompt.style.color = "white";
+        } else {
+          // Not on a node
+          playerState.interactionTarget = null;
+          playerState.movementLocked = false;
+
+          if (playerState.lastVisitedNodeId) {
+            const lastNode = STOPS.find(
+              (s) => s.id === playerState.lastVisitedNodeId
+            );
+            if (lastNode) {
+              const dist = Math.sqrt(
+                Math.pow(lastNode.x - playerState.x, 2) +
+                  Math.pow(lastNode.y - playerState.y, 2)
+              );
+              if (dist > 50) playerState.lastVisitedNodeId = null;
+            }
+          }
+
+          uiPrompt.style.display = "none";
+        }
+      }
+
+      function handleInteraction() {
+        if (playerState.popupOpen) {
+          const stop = playerState.interactionTarget;
+          // New: Save answer on interaction press
+          if (
+            stop.type === "level" ||
+            stop.type === "mushroom" ||
+            stop.type === "castle_small"
+          ) {
+            playerState.answers[stop.id] = popupAnswerInput.value.trim();
+          }
+
+          if (stop && stop.music && !stop.loopMusic) {
+            playNodeMusic(stop.music);
+            popupFooter.innerText = "PLAYING MUSIC...";
+          }
+          return;
+        }
+
+        if (playerState.interactionTarget) {
+          openPopup(playerState.interactionTarget);
+        }
+      }
+
+      function openPopup(stopData) {
+        playerState.popupOpen = true;
+        audio.footsteps.pause();
+
+        popupTitle.innerText = stopData.title;
+        popupText.innerHTML = stopData.text;
+        popupImg.src = stopData.img || "placeholder_1.png";
+
+        // Handle answer input and submission button visibility
+        const isQuestion =
+          stopData.type === "level" ||
+          stopData.type === "mushroom" ||
+          stopData.type === "castle_small";
+
+        if (isQuestion) {
+          answerInputGroup.style.display = "flex";
+          popupAnswerInput.value = playerState.answers[stopData.id] || "";
+        } else {
+          answerInputGroup.style.display = "none";
+        }
+
+        // Only show submit button on Q10/castle_small
+        if (stopData.id === "Q10") {
+          submitButton.style.display = "block";
+          submitButton.disabled = playerState.hasSubmitted;
+          submitButton.innerText = playerState.hasSubmitted
+            ? "ANSWERS SUBMITTED!"
+            : "SUBMIT YOUR ANSWERS";
+        } else {
+          submitButton.style.display = "none";
+        }
+
+        let footerText = "PRESS ESC TO CLOSE";
+        if (stopData.music && !stopData.loopMusic) {
+          footerText += " | SPACE TO PLAY MUSIC";
+        }
+        popupFooter.innerText = footerText;
+
+        popupOverlay.style.display = "flex";
+        uiPrompt.style.display = "none";
+
+        if (stopData.loopMusic && stopData.music) {
+          playNodeMusic(stopData.music, true);
+        }
+      }
+
+      function closePopup() {
+        if (!playerState.popupOpen) return;
+
+        const stop = playerState.interactionTarget;
+
+        // NEW: Save answer before closing
+        if (
+          stop.type === "level" ||
+          stop.type === "mushroom" ||
+          stop.type === "castle_small"
+        ) {
+          playerState.answers[stop.id] = popupAnswerInput.value.trim();
+        }
+
+        if (audio.currentMusic) {
+          audio.currentMusic.pause();
+          audio.currentMusic = null;
+        }
+
+        if (stop.type === "castle_small") {
+          playerState.visitedSmallCastle = true;
+        }
+
+        if (!playerState.visitedNodes.includes(stop.id)) {
+          playerState.visitedNodes.push(stop.id);
+        }
+
+        playerState.lastVisitedNodeId = stop.id;
+
+        playerState.movementLocked = false;
+        playerState.popupOpen = false;
+        popupOverlay.style.display = "none";
+      }
+
+      // NEW: Submission function
+      async function handleSubmitAnswers() {
+        if (playerState.hasSubmitted) return;
+        submitButton.disabled = true;
+        submitButton.innerText = "SENDING...";
+
+        // Collect all data
+        const formData = new FormData();
+        formData.append("name", playerState.playerName || "Anonymous");
+        // Q1 to Q10
+        Object.keys(playerState.answers).forEach((key) => {
+          formData.append(key, playerState.answers[key]);
+        });
+
+        try {
+          const response = await fetch(WEB_APP_URL, {
+            method: "POST",
+            body: formData,
+          });
+
+          if (!response.ok) throw new Error("Network response was not ok");
+          const result = await response.json();
+
+          if (result && result.result === "success") {
+            playerState.hasSubmitted = true;
+            submitButton.innerText = "SUBMITTED! THANK YOU!";
+            // Update the state so the player can cross the bridge
+            playerState.visitedSmallCastle = true;
+          } else {
+            throw new Error("Submission failed.");
+          }
+        } catch (error) {
+          console.error("Submission Error:", error);
+          submitButton.disabled = false;
+          submitButton.innerText = "SUBMISSION FAILED! Try again.";
+          alert(
+            "Submission failed. Check the console for details or try again."
+          );
+        }
+      }
+
+      function playNodeMusic(src, loop = false) {
+        if (audio.currentMusic) {
+          audio.currentMusic.pause();
+        }
+        audio.currentMusic = new Audio(src);
+        audio.currentMusic.loop = loop;
+        audio.currentMusic.play();
+      }
+
+      function drawDebugRoads() {
+        ROADS.forEach((r) => {
+          const div = document.createElement("div");
+          div.className = "debug-rect";
+          div.style.left = r.x + "px";
+          div.style.top = r.y + "px";
+          div.style.width = r.w + "px";
+          div.style.height = r.h + "px";
+          gameContainer.appendChild(div);
+        });
+        STOPS.forEach((s) => {
+          const div = document.createElement("div");
+          div.className = "debug-rect";
+          div.style.backgroundColor = "rgba(255,0,0,0.5)";
+          div.style.left = s.x - 15 + "px";
+          div.style.top = s.y - 15 + "px";
+          div.style.width = "30px";
+          div.style.height = "30px";
+          div.innerHTML = s.id;
+          gameContainer.appendChild(div);
+        });
+
+        // Draw Bridge Warning Zone (Yellow, larger)
+        const warningDiv = document.createElement("div");
+        warningDiv.className = "debug-rect";
+        warningDiv.style.backgroundColor = "rgba(255,255,0,0.3)";
+        warningDiv.style.left = BRIDGE_WARNING_ZONE.x + "px";
+        warningDiv.style.top = BRIDGE_WARNING_ZONE.y + "px";
+        warningDiv.style.width = BRIDGE_WARNING_ZONE.w + "px";
+        warningDiv.style.height = BRIDGE_WARNING_ZONE.h + "px";
+        warningDiv.innerHTML = "WARN";
+        warningDiv.style.color = "black";
+        warningDiv.style.fontSize = "10px";
+        gameContainer.appendChild(warningDiv);
+
+        // Draw Bridge Collision Zone (Blue, hard wall)
+        const bridgeDiv = document.createElement("div");
+        bridgeDiv.className = "debug-rect";
+        bridgeDiv.style.backgroundColor = "rgba(0,0,255,0.5)";
+        bridgeDiv.style.left = BRIDGE_ZONE.x + "px";
+        bridgeDiv.style.top = BRIDGE_ZONE.y + "px";
+        bridgeDiv.style.width = BRIDGE_ZONE.w + "px";
+        bridgeDiv.style.height = BRIDGE_ZONE.h + "px";
+        bridgeDiv.innerHTML = "STOP";
+        bridgeDiv.style.color = "white";
+        bridgeDiv.style.fontSize = "10px";
+        gameContainer.appendChild(bridgeDiv);
+      }
+
+      gameContainer.addEventListener("click", (e) => {
+        if (!DEBUG_MODE) return;
+        const rect = gameContainer.getBoundingClientRect();
+        console.log(
+          `{ x: ${Math.round(e.clientX - rect.left)}, y: ${Math.round(
+            e.clientY - rect.top
+          )} },`
+        );
+      });
+
+      init();
+    </script>
+  </body>
+</html>
