@@ -612,7 +612,7 @@
           !playerState.visitedSmallCastle &&
           isInside(playerState.x, playerState.y, BRIDGE_WARNING_ZONE)
         ) {
-          uiPrompt.innerText = "LOCKED: Visit the Final Level first!";
+          uiPrompt.innerText = "LOCKED: Visit the Final Level and submit your answers first!";
           uiPrompt.style.display = "block";
           uiPrompt.style.color = "red";
           return;
@@ -763,7 +763,7 @@
         }
 
         if (stop.type === "castle_small") {
-          playerState.visitedSmallCastle = true;
+          // playerState.visitedSmallCastle = true;
         }
 
         if (!playerState.visitedNodes.includes(stop.id)) {
@@ -927,4 +927,3 @@
     </script>
   </body>
 </html>
-
