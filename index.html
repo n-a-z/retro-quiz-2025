@@ -297,7 +297,7 @@
           y: 70,
           type: "mushroom",
           title: "Musical Zone 1",
-          text: "It is quiet here. For now... Name the game this music is from.",
+          text: "It's peaceful here.<br>Name the game this music is from.",
           music: "mushroom_1.mp3",
           img: "mushroom_1.gif",
         },
@@ -325,7 +325,7 @@
           y: 330,
           type: "mushroom",
           title: "Musical Zone 2",
-          text: "Rest your weary legs. Name the game this music is from.",
+          text: "Rest your weary legs.<br>Name the game this music is from.",
           music: "mushroom_2.mp3",
           img: "mushroom_2.gif",
         },
@@ -353,7 +353,7 @@
           y: 560,
           type: "mushroom",
           title: "Musical Zone 3",
-          text: "Music fills you with DETERMINATION! Name the game this music is from.",
+          text: "Music fills you with DETERMINATION!<br>Name the game this music is from.",
           music: "mushroom_3.mp3",
           img: "mushroom_3.gif",
         },
@@ -776,9 +776,18 @@
         submitButton.disabled = true;
         submitButton.innerText = "SENDING...";
 
+        // ⚡ CRITICAL FIX: Update the playerState with the current answer
+        // before attempting to submit. This ensures the Q10 answer is captured.
+        const currentQuestionId = playerState.interactionTarget.id;
+        if (currentQuestionId === "Q10") {
+          playerState.answers["Q10"] = popupAnswerInput.value.trim();
+        }
+        // ---------------------------------------------------------------
+
         // Collect all data
         const formData = new FormData();
         formData.append("name", playerState.playerName || "Anonymous");
+
         // Q1 to Q10
         Object.keys(playerState.answers).forEach((key) => {
           formData.append(key, playerState.answers[key]);
@@ -883,4 +892,3 @@
     </script>
   </body>
 </html>
-
