@@ -30,6 +30,7 @@
         height: 640px;
         box-shadow: 0 0 20px rgba(0, 0, 0, 0.8);
         background-color: #000;
+        transform-origin: center center;
       }
 
       #overworld-map {
@@ -304,7 +305,7 @@
         {
           id: "Q4",
           x: 790,
-          y: 210,
+          y: 200,
           type: "level",
           title: "Level 4",
           text: "The term easter egg refers to a hidden message or feature in a work.<br>Which game contained the first ever video game easter egg?",
@@ -463,6 +464,12 @@
         playerState.movementLocked = true;
         updatePlayerPosition();
         if (DEBUG_MODE) drawDebugRoads();
+
+        // --- NEW SCALING CODE ---
+        resizeGame(); // Scale immediately on load
+        window.addEventListener("resize", resizeGame); // Scale whenever window changes
+        // ------------------------
+
         window.requestAnimationFrame(gameLoop);
       }
 
@@ -887,6 +894,31 @@
           )} },`
         );
       });
+
+      /* --- RESPONSIVE SCALING --- */
+      function resizeGame() {
+        const container = document.getElementById("game-container");
+
+        // Your game's native resolution
+        const targetWidth = 960;
+        const targetHeight = 640;
+
+        // Get current window size
+        const windowWidth = window.innerWidth;
+        const windowHeight = window.innerHeight;
+
+        // Calculate the scale factor (fits the game within the screen)
+        const scale = Math.min(
+          windowWidth / targetWidth,
+          windowHeight / targetHeight
+        );
+
+        // Apply the scale
+        container.style.transform = `scale(${scale})`;
+
+        // Optional: If the screen is very large, you might want to cap the scale at 1
+        // container.style.transform = `scale(${Math.min(scale, 1)})`;
+      }
 
       init();
     </script>
