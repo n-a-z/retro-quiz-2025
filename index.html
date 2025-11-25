@@ -270,7 +270,7 @@
       const PLAYER_SPEED = 4;
       // ⚠️ REPLACE THIS WITH YOUR DEPLOYED GOOGLE APPS SCRIPT WEB APP URL
       const WEB_APP_URL =
-        "https://script.google.com/macros/s/AKfycbxgtYEEbgQJBIUDZEmQQzOfGZyE5LDdTWQTKC2CVZ1EAs4HJxaoD2iX0rpJAIFtGeav/exec";
+        "https://script.google.com/macros/s/AKfycbyaWRTJ-ajFPiQhHaZ_6mIFPO69AkZCHjNX-isCqE1XkNcB8qztDXvrWVcs3rXtyC0R/exec";
 
       const STOPS = [
         { id: "start", x: 120, y: 180, type: "start" },
@@ -794,6 +794,9 @@
         // Collect all data
         const formData = new FormData();
         formData.append("name", playerState.playerName || "Anonymous");
+
+        // Timestamp
+        formData.append("Timestamp", new Date().toLocaleString());
 
         // Q1 to Q10
         Object.keys(playerState.answers).forEach((key) => {
