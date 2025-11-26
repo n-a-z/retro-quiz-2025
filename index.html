@@ -47,7 +47,7 @@
         position: absolute;
         width: 60px;
         height: 60px;
-        background-image: url("player.gif");
+        background-image: url("/assets/img/player.gif");
         background-size: contain;
         background-repeat: no-repeat;
         background-position: center;
@@ -209,7 +209,7 @@
   </head>
   <body>
     <div id="game-container">
-      <img id="overworld-map" src="overworld_map.png" alt="Map" />
+      <img id="overworld-map" src="/assets/img/overworld_map.png" alt="Map" />
       <div id="player"></div>
       <div id="ui-prompt">PRESS ENTER</div>
 
@@ -281,7 +281,7 @@
           type: "level",
           title: "Level 1",
           text: "What's the minimum and maximum number of squares that can create a single block / shape in Tetris?",
-          img: "tetris_transparent_2.png",
+          img: "/assets/img/tetris_transparent_2.png",
         },
         {
           id: "Q2",
@@ -290,7 +290,7 @@
           type: "level",
           title: "Level 2",
           text: "Metroidvania is currently a very popular genre of games. From which two classical games does it take it's name from?",
-          img: "silksong.gif",
+          img: "/assets/img/silksong.gif",
         },
         {
           id: "Q3",
@@ -298,9 +298,9 @@
           y: 70,
           type: "mushroom",
           title: "Musical Zone 1",
-          text: "You feel a calming tranquility... You're filled with determination.<br>Name the game this music is from.",
-          music: "mushroom_1.mp3",
-          img: "mushroom_1.gif",
+          text: "You feel a calming tranquility... it fills you with determination.<br>Name the game this music is from.",
+          music: "/assets/music/mushroom_1.mp3",
+          img: "/assets/img/mushroom_1.gif",
         },
         {
           id: "Q4",
@@ -309,7 +309,7 @@
           type: "level",
           title: "Level 4",
           text: "The term easter egg refers to a hidden message or feature in a work.<br>Which game contained the first ever video game easter egg?",
-          img: "easter_egg.gif",
+          img: "/assets/img/easter_egg.gif",
         },
         {
           id: "Q5",
@@ -318,7 +318,7 @@
           type: "level",
           title: "Level 5",
           text: "Name at least 2 ghosts<br>from Pac-Man.",
-          img: "pac_man.gif",
+          img: "/assets/img/pac_man.gif",
         },
         {
           id: "Q6",
@@ -326,9 +326,9 @@
           y: 330,
           type: "mushroom",
           title: "Musical Zone 2",
-          text: "Rest your weary legs... You're filled with determination.<br>Name the game this music is from.",
-          music: "mushroom_2.mp3",
-          img: "mushroom_2.gif",
+          text: "Take this. This gives you determination.<br>Name the game this music is from.",
+          music: "/assets/music/mushroom_2.mp3",
+          img: "/assets/img/mushroom_2.gif",
         },
         {
           id: "Q7",
@@ -337,7 +337,7 @@
           type: "level",
           title: "Level 7",
           text: "Name these consoles.",
-          img: "consoles.png",
+          img: "/assets/img/consoles.png",
         },
         {
           id: "Q8",
@@ -346,7 +346,7 @@
           type: "level",
           title: "Level 8",
           text: "Who did Mario try to rescue in Donkey Kong?",
-          img: "donkey_kong.gif",
+          img: "/assets/img/donkey_kong.gif",
         },
         {
           id: "Q9",
@@ -354,9 +354,9 @@
           y: 560,
           type: "mushroom",
           title: "Musical Zone 3",
-          text: "Music fills you with DETERMINATION!<br>Name the game this music is from.",
-          music: "mushroom_3.mp3",
-          img: "mushroom_3.gif",
+          text: "What I have shown you is reality... You're filled with determination.<br>Name the game this music is from.",
+          music: "/assets/music/mushroom_3.mp3",
+          img: "/assets/img/mushroom_3.gif",
         },
         {
           id: "Q10", // Changed from castle_small to Q10 for sheet correlation
@@ -365,7 +365,7 @@
           type: "castle_small",
           title: "Final Level",
           text: "What is the name of the legendary character who famously advertised Sega Saturn?",
-          img: "sega.gif",
+          img: "/assets/img/sega.gif",
         },
         {
           id: "castle_big",
@@ -374,8 +374,8 @@
           type: "castle_big",
           title: "Congratulations!",
           text: "You have completed the overworld adventure! Well done, brave explorer!<br><br>Level 1: 4 squares<br>Level 2: Metroid + Castlevania<br>Musical Zone 1: Tetris<br>Level 4: Adventure (Atari 2600)<br>Level 5: Pinky, Blinky, Inky and Clyde<br>Musical Zone 2: Zelda<br>Level 7: Atari 2600, NES, SNES, Sega Genesis/MD, Game Boy<br>Level 8: Pauline<br>Musical Zone 3: Final Fantasy VII<br>Final Level: <a href='https://www.youtube.com/watch?v=6emBbKmHpB0' target='_blank'>Segata Sanshiro</a>",
-          img: "castle.gif",
-          music: "castle.mp3",
+          img: "/assets/img/castle.gif",
+          music: "/assets/music/castle.mp3",
           loopMusic: true,
         },
       ];
@@ -434,7 +434,7 @@
       };
 
       const audio = {
-        footsteps: new Audio("footsteps.mp3"),
+        footsteps: new Audio("/assets/music/footsteps.mp3"),
         currentMusic: null,
       };
       audio.footsteps.loop = true;
@@ -703,7 +703,7 @@
 
         popupTitle.innerText = stopData.title;
         popupText.innerHTML = stopData.text;
-        popupImg.src = stopData.img || "placeholder_1.png";
+        popupImg.src = stopData.img || "/assets/img/placeholder_1.png";
 
         // Handle answer input and submission button visibility
         const isQuestion =
