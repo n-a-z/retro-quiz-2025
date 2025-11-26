@@ -307,7 +307,7 @@
           x: 790,
           y: 200,
           type: "level",
-          title: "Level 4",
+          title: "Level 3",
           text: "The term easter egg refers to a hidden message or feature in a work.<br>Which game contained the first ever video game easter egg?",
           img: "assets/img/easter_egg.gif",
         },
@@ -316,13 +316,13 @@
           x: 640,
           y: 180,
           type: "level",
-          title: "Level 5",
+          title: "Level 4",
           text: "Name at least 2 ghosts<br>from Pac-Man.",
           img: "assets/img/pac_man.gif",
         },
         {
           id: "Q6",
-          x: 530,
+          x: 520,
           y: 330,
           type: "mushroom",
           title: "Musical Zone 2",
@@ -335,7 +335,7 @@
           x: 390,
           y: 310,
           type: "level",
-          title: "Level 7",
+          title: "Level 5",
           text: "Name <a href='assets/img/consoles.png' target='_blank'>these</a> consoles.",
           img: "assets/img/consoles.png",
         },
@@ -344,7 +344,7 @@
           x: 260,
           y: 580,
           type: "level",
-          title: "Level 8",
+          title: "Level 6",
           text: "Who did Mario try to rescue in Donkey Kong?",
           img: "assets/img/donkey_kong.gif",
         },
@@ -373,7 +373,7 @@
           y: 435,
           type: "castle_big",
           title: "Congratulations!",
-          text: "You have completed the overworld adventure! Well done, brave explorer!<br><br>Level 1: 4 squares<br>Level 2: Metroid + Castlevania<br>Musical Zone 1: Tetris<br>Level 4: Adventure (Atari 2600)<br>Level 5: Pinky, Blinky, Inky and Clyde<br>Musical Zone 2: Zelda<br>Level 7: Atari 2600, NES/FC, SFC/SNES, Sega Genesis/MD, Game Boy<br>Level 8: Pauline<br>Musical Zone 3: Final Fantasy VII<br>Final Level: <a href='https://www.youtube.com/watch?v=6emBbKmHpB0' target='_blank'>Segata Sanshiro</a>",
+          text: "You have completed the overworld adventure! Well done, brave explorer!<br><br>Level 1: 4 squares<br>Level 2: Metroid + Castlevania<br>Musical Zone 1: Tetris<br>Level 3: Adventure (Atari 2600)<br>Level 4: Pinky, Blinky, Inky and Clyde<br>Musical Zone 2: Zelda<br>Level 5: Atari 2600, NES/FC, SFC/SNES, Sega Genesis/MD, Game Boy<br>Level 6: Pauline<br>Musical Zone 3: Final Fantasy VII<br>Final Level: <a href='https://www.youtube.com/watch?v=6emBbKmHpB0' target='_blank'>Segata Sanshiro</a>",
           img: "assets/img/castle.gif",
           music: "assets/music/castle.mp3",
           loopMusic: true,
@@ -384,12 +384,12 @@
         { x: 120, y: 170, w: 150, h: 40 }, // Start to coin, horizontal(-)
         { x: 240, y: 40, w: 40, h: 150 }, // coin to 1, vertical (|)
         { x: 250, y: 40, w: 540, h: 40 }, // 1 to end, horizontal(-)
-        { x: 760, y: 40, w: 40, h: 170 }, // coin to 4, vertical (|)
-        { x: 510, y: 170, w: 300, h: 40 }, // 4 to coin, horizontal(-)
+        { x: 760, y: 40, w: 40, h: 170 }, // coin to 3, vertical (|)
+        { x: 510, y: 170, w: 300, h: 40 }, // 3 to coin, horizontal(-)
         { x: 510, y: 170, w: 40, h: 160 }, // coin to mushroom 2, vertical (|)
         { x: 250, y: 300, w: 300, h: 40 }, // mushroom 2 to coin, horizontal(-)
-        { x: 250, y: 300, w: 40, h: 290 }, // coin to 8, vertical (|)
-        { x: 250, y: 550, w: 300, h: 40 }, // 8 to mushroom 3, horizontal(-)
+        { x: 250, y: 300, w: 40, h: 290 }, // coin to 6, vertical (|)
+        { x: 250, y: 550, w: 300, h: 40 }, // 6 to mushroom 3, horizontal(-)
         { x: 510, y: 430, w: 40, h: 160 }, // mushroom 3 to bridge, vertical (|)
         { x: 370, y: 425, w: 420, h: 40 }, // small castle to big castle, horizontal(-)
       ];
@@ -460,7 +460,11 @@
       /* --- INITIALIZATION --- */
       function init() {
         // Start by showing the initial name input popup
-        initialNamePopup.style.display = "flex";
+        if (DEBUG_MODE) {
+          initialNamePopup.style.display = "none";
+        } else {
+          initialNamePopup.style.display = "flex";
+        }
         playerState.movementLocked = true;
         updatePlayerPosition();
         if (DEBUG_MODE) drawDebugRoads();
