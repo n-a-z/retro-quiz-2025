@@ -520,8 +520,11 @@
         }
       });
 
-      // NEW: Event listener for submission
-      submitButton.addEventListener("click", handleSubmitAnswers);
+      // NEW: Event listener for submission - CHANGED TO CALL A WRAPPER FUNCTION
+      submitButton.addEventListener("click", confirmAndSubmit);
+
+      // OLD: Event listener for submission
+      // submitButton.addEventListener("click", handleSubmitAnswers);
 
       /* --- GAME LOOP --- */
       function gameLoop() {
@@ -781,57 +784,70 @@
         popupOverlay.style.display = "none";
       }
 
-      // NEW: Submission function
+      // NEW WRAPPER FUNCTION FOR CONFIRMATION
+      function confirmAndSubmit() {
+          if (playerState.hasSubmitted) return;
+
+          // Use a native JS confirmation dialog for simplicity and immediate implementation
+          if (confirm("Are you sure you want to submit your answers? This action cannot be undone.")) {
+              handleSubmitAnswers();
+          }
+          // If the user clicks 'Cancel' (returns false), the function simply exits without calling handleSubmitAnswers.
+      }
+
+      // NEW: Submission function - RENAMED TO handleSubmitAnswers (without 'confirm')
       async function handleSubmitAnswers() {
-        if (playerState.hasSubmitted) return;
-        submitButton.disabled = true;
-        submitButton.innerText = "SENDING...";
+          if (playerState.hasSubmitted) return;
+          
+          // We already confirmed, so now we execute the submission logic:
+          submitButton.disabled = true;
+          submitButton.innerText = "SENDING...";
 
-        // ⚡ CRITICAL FIX: Update the playerState with the current answer
-        // before attempting to submit. This ensures the Q10 answer is captured.
-        const currentQuestionId = playerState.interactionTarget.id;
-        if (currentQuestionId === "Q10") {
-          playerState.answers["Q10"] = popupAnswerInput.value.trim();
-        }
-        // ---------------------------------------------------------------
+          // ⚡ CRITICAL FIX: Update the playerState with the current answer
+          // before attempting to submit. This ensures the Q10 answer is captured.
+          const currentQuestionId = playerState.interactionTarget.id;
+          if (currentQuestionId === "Q10") {
+              playerState.answers["Q10"] = popupAnswerInput.value.trim();
+          }
+          // ---------------------------------------------------------------
 
-        // Collect all data
-        const formData = new FormData();
-        formData.append("name", playerState.playerName || "Anonymous");
+          // Collect all data
+          const formData = new FormData();
+          formData.append("name", playerState.playerName || "Anonymous");
 
-        // Timestamp
-        formData.append("Timestamp", new Date().toLocaleString());
+          // Timestamp
+          formData.append("Timestamp", new Date().toLocaleString());
 
-        // Q1 to Q10
-        Object.keys(playerState.answers).forEach((key) => {
-          formData.append(key, playerState.answers[key]);
-        });
-
-        try {
-          const response = await fetch(WEB_APP_URL, {
-            method: "POST",
-            body: formData,
+          // Q1 to Q10
+          Object.keys(playerState.answers).forEach((key) => {
+              formData.append(key, playerState.answers[key]);
           });
 
-          if (!response.ok) throw new Error("Network response was not ok");
-          const result = await response.json();
+          try {
+              const response = await fetch(WEB_APP_URL, {
+                  method: "POST",
+                  body: formData,
+              });
 
-          if (result && result.result === "success") {
-            playerState.hasSubmitted = true;
-            submitButton.innerText = "SUBMITTED! THANK YOU!";
-            // Update the state so the player can cross the bridge
-            playerState.visitedSmallCastle = true;
-          } else {
-            throw new Error("Submission failed.");
+              if (!response.ok) throw new Error("Network response was not ok");
+              const result = await response.json();
+
+              if (result && result.result === "success") {
+                  playerState.hasSubmitted = true;
+                  submitButton.innerText = "SUBMITTED! THANK YOU!";
+                  // Update the state so the player can cross the bridge
+                  playerState.visitedSmallCastle = true;
+              } else {
+                  throw new Error("Submission failed.");
+              }
+          } catch (error) {
+              console.error("Submission Error:", error);
+              submitButton.disabled = false;
+              submitButton.innerText = "SUBMISSION FAILED! Try again.";
+              alert(
+                  "Submission failed. Check the console for details or try again."
+              );
           }
-        } catch (error) {
-          console.error("Submission Error:", error);
-          submitButton.disabled = false;
-          submitButton.innerText = "SUBMISSION FAILED! Try again.";
-          alert(
-            "Submission failed. Check the console for details or try again."
-          );
-        }
       }
 
       function playNodeMusic(src, loop = false) {
