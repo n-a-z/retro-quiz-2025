@@ -477,7 +477,7 @@
           initialNamePopup.style.display = "none";
         } else {
           initialNamePopup.style.display = "flex";
-          
+
           // NEW: Focus the name input automatically
           setTimeout(() => playerNameInput.focus(), 10);
         }
@@ -552,6 +552,9 @@
           // Update button state
           playMusicButton.innerText = "PLAYING MUSIC...";
           playMusicButton.disabled = true;
+
+          // NEW: Refocus the text area so the user can keep typing while the music plays
+          popupAnswerInput.focus();
 
           // Revert when music finishes
           audio.currentMusic.onended = () => {
