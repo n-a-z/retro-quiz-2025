@@ -234,7 +234,7 @@
           <button
             id="play-music-button"
             class="popup-submit-btn"
-            style="display: none;"
+            style="display: none; background: #00ccff;"
           >
             PRESS TO PLAY MUSIC
           </button>
@@ -756,6 +756,13 @@
           answerInputGroup.style.display = "none";
         }
 
+        // NEW: Change title color based on node type
+        if (stopData.type === "mushroom") {
+          popupTitle.style.color = "#00ccff"; // Musical rounds color
+        } else {
+          popupTitle.style.color = "#ffcc00"; // Default yellow for other levels
+        }
+        
         // --- Music Button Visibility ---
         if (stopData.music && !stopData.loopMusic) {
           playMusicButton.style.display = "block";
