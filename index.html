@@ -477,6 +477,9 @@
           initialNamePopup.style.display = "none";
         } else {
           initialNamePopup.style.display = "flex";
+          
+          // NEW: Focus the name input automatically
+          setTimeout(() => playerNameInput.focus(), 10);
         }
         playerState.movementLocked = true;
         updatePlayerPosition();
@@ -755,6 +758,9 @@
         if (isQuestion) {
           answerInputGroup.style.display = "flex";
           popupAnswerInput.value = playerState.answers[stopData.id] || "";
+
+          // NEW: Focus the answer textarea automatically
+          setTimeout(() => popupAnswerInput.focus(), 10);
         } else {
           answerInputGroup.style.display = "none";
         }
