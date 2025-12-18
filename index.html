@@ -232,9 +232,17 @@
           </div>
 
           <button
+            id="play-music-button"
+            class="popup-submit-btn"
+            style="display: none;"
+          >
+            PRESS TO PLAY MUSIC
+          </button>
+
+          <button
             id="submit-button"
             class="popup-submit-btn"
-            style="display: none"
+            style="display: none;"
           >
             Submit your answers
           </button>
@@ -271,6 +279,8 @@
       // ⚠️ REPLACE THIS WITH YOUR DEPLOYED GOOGLE APPS SCRIPT WEB APP URL
       const WEB_APP_URL =
         "https://script.google.com/macros/s/AKfycbwHuUir7NrnMSf2Qya6yucNJWlCaOP_IGlLKEKz2Ivtnd1mr2wiPvhI3fBmCkJeoQ/exec";
+
+      const playMusicButton = document.getElementById("play-music-button");
 
       const STOPS = [
         { id: "start", x: 120, y: 180, type: "start" },
@@ -480,15 +490,16 @@
       /* --- INPUT --- */
       const keys = {};
       window.addEventListener("keydown", (e) => {
-        if (!e.key) return; 
+        if (!e.key) return;
 
         const key = e.key.toLowerCase();
-        
-        // NEW: Check if the user is currently typing in an input or textarea
-        const isTyping = document.activeElement.tagName === 'INPUT' || 
-                        document.activeElement.tagName === 'TEXTAREA';
 
-        // Prevent game keys (like space) from firing if typing, 
+        // NEW: Check if the user is currently typing in an input or textarea
+        const isTyping =
+          document.activeElement.tagName === "INPUT" ||
+          document.activeElement.tagName === "TEXTAREA";
+
+        // Prevent game keys (like space) from firing if typing,
         // but still allow the key to be recorded for the movement system if not typing
         if (!isTyping) {
           keys[key] = true;
@@ -498,15 +509,15 @@
           if (key === "enter") {
             startGameButton.click();
           }
-          return; 
+          return;
         }
 
-        // UPDATED: Only handle game interaction if NOT typing, OR if the key is Enter 
+        // UPDATED: Only handle game interaction if NOT typing, OR if the key is Enter
         // (Enter is often used to submit, but Space should definitely be blocked)
         if ((key === "enter" || key === " ") && !isTyping) {
-            handleInteraction();
+          handleInteraction();
         }
-        
+
         if (key === "escape") closePopup();
       });
 
@@ -523,6 +534,24 @@
           playerState.movementLocked = false;
         } else {
           alert("Please enter your name to start the adventure!");
+        }
+      });
+
+      // NEW: Event listener for playing music 
+      playMusicButton.addEventListener("click", () => {
+        const stop = playerState.interactionTarget;
+        if (stop && stop.music) {
+          playNodeMusic(stop.music);
+          
+          // Update button state
+          playMusicButton.innerText = "PLAYING MUSIC...";
+          playMusicButton.disabled = true;
+
+          // Revert when music finishes
+          audio.currentMusic.onended = () => {
+            playMusicButton.innerText = "PRESS TO PLAY MUSIC";
+            playMusicButton.disabled = false;
+          };
         }
       });
 
@@ -625,7 +654,8 @@
           !playerState.visitedSmallCastle &&
           isInside(playerState.x, playerState.y, BRIDGE_WARNING_ZONE)
         ) {
-          uiPrompt.innerText = "LOCKED: Visit the Final Level and submit your answers first!";
+          uiPrompt.innerText =
+            "LOCKED: Visit the Final Level and submit your answers first!";
           uiPrompt.style.display = "block";
           uiPrompt.style.color = "red";
           return;
@@ -697,11 +727,6 @@
           ) {
             playerState.answers[stop.id] = popupAnswerInput.value.trim();
           }
-
-          if (stop && stop.music && !stop.loopMusic) {
-            playNodeMusic(stop.music);
-            popupFooter.innerText = "PLAYING MUSIC...";
-          }
           return;
         }
 
@@ -731,6 +756,15 @@
           answerInputGroup.style.display = "none";
         }
 
+        // --- Music Button Visibility ---
+        if (stopData.music && !stopData.loopMusic) {
+          playMusicButton.style.display = "block";
+          playMusicButton.innerText = "PRESS TO PLAY MUSIC";
+          playMusicButton.disabled = false;
+        } else {
+          playMusicButton.style.display = "none";
+        }
+
         // Only show submit button on Q10/castle_small
         if (stopData.id === "Q10") {
           submitButton.style.display = "block";
@@ -743,9 +777,9 @@
         }
 
         let footerText = "PRESS ESC TO CLOSE";
-        if (stopData.music && !stopData.loopMusic) {
-          footerText += " | SPACE TO PLAY MUSIC";
-        }
+        // if (stopData.music && !stopData.loopMusic) {
+        //   footerText += " | SPACE TO PLAY MUSIC";
+        // }
         popupFooter.innerText = footerText;
 
         popupOverlay.style.display = "flex";
@@ -773,6 +807,9 @@
         if (audio.currentMusic) {
           audio.currentMusic.pause();
           audio.currentMusic = null;
+          // Reset button state when closing
+          playMusicButton.innerText = "PRESS TO PLAY MUSIC";
+          playMusicButton.disabled = false;
         }
 
         if (stop.type === "castle_small") {
@@ -792,68 +829,72 @@
 
       // NEW WRAPPER FUNCTION FOR CONFIRMATION
       function confirmAndSubmit() {
-          if (playerState.hasSubmitted) return;
+        if (playerState.hasSubmitted) return;
 
-          // Use a native JS confirmation dialog for simplicity and immediate implementation
-          if (confirm("Are you sure you want to submit your answers? This action cannot be undone.")) {
-              handleSubmitAnswers();
-          }
-          // If the user clicks 'Cancel' (returns false), the function simply exits without calling handleSubmitAnswers.
+        // Use a native JS confirmation dialog for simplicity and immediate implementation
+        if (
+          confirm(
+            "Are you sure you want to submit your answers? This action cannot be undone."
+          )
+        ) {
+          handleSubmitAnswers();
+        }
+        // If the user clicks 'Cancel' (returns false), the function simply exits without calling handleSubmitAnswers.
       }
 
       // NEW: Submission function - RENAMED TO handleSubmitAnswers (without 'confirm')
       async function handleSubmitAnswers() {
-          if (playerState.hasSubmitted) return;
-          
-          // We already confirmed, so now we execute the submission logic:
-          submitButton.disabled = true;
-          submitButton.innerText = "SENDING...";
+        if (playerState.hasSubmitted) return;
 
-          // ⚡ CRITICAL FIX: Update the playerState with the current answer
-          // before attempting to submit. This ensures the Q10 answer is captured.
-          const currentQuestionId = playerState.interactionTarget.id;
-          if (currentQuestionId === "Q10") {
-              playerState.answers["Q10"] = popupAnswerInput.value.trim();
-          }
-          // ---------------------------------------------------------------
+        // We already confirmed, so now we execute the submission logic:
+        submitButton.disabled = true;
+        submitButton.innerText = "SENDING...";
 
-          // Collect all data
-          const formData = new FormData();
-          formData.append("name", playerState.playerName || "Anonymous");
+        // ⚡ CRITICAL FIX: Update the playerState with the current answer
+        // before attempting to submit. This ensures the Q10 answer is captured.
+        const currentQuestionId = playerState.interactionTarget.id;
+        if (currentQuestionId === "Q10") {
+          playerState.answers["Q10"] = popupAnswerInput.value.trim();
+        }
+        // ---------------------------------------------------------------
 
-          // Timestamp
-          formData.append("Timestamp", new Date().toLocaleString());
+        // Collect all data
+        const formData = new FormData();
+        formData.append("name", playerState.playerName || "Anonymous");
 
-          // Q1 to Q10
-          Object.keys(playerState.answers).forEach((key) => {
-              formData.append(key, playerState.answers[key]);
+        // Timestamp
+        formData.append("Timestamp", new Date().toLocaleString());
+
+        // Q1 to Q10
+        Object.keys(playerState.answers).forEach((key) => {
+          formData.append(key, playerState.answers[key]);
+        });
+
+        try {
+          const response = await fetch(WEB_APP_URL, {
+            method: "POST",
+            body: formData,
           });
 
-          try {
-              const response = await fetch(WEB_APP_URL, {
-                  method: "POST",
-                  body: formData,
-              });
+          if (!response.ok) throw new Error("Network response was not ok");
+          const result = await response.json();
 
-              if (!response.ok) throw new Error("Network response was not ok");
-              const result = await response.json();
-
-              if (result && result.result === "success") {
-                  playerState.hasSubmitted = true;
-                  submitButton.innerText = "SUBMITTED! THANK YOU!";
-                  // Update the state so the player can cross the bridge
-                  playerState.visitedSmallCastle = true;
-              } else {
-                  throw new Error("Submission failed.");
-              }
-          } catch (error) {
-              console.error("Submission Error:", error);
-              submitButton.disabled = false;
-              submitButton.innerText = "SUBMISSION FAILED! Try again.";
-              alert(
-                  "Submission failed. Check the console for details or try again."
-              );
+          if (result && result.result === "success") {
+            playerState.hasSubmitted = true;
+            submitButton.innerText = "SUBMITTED! THANK YOU!";
+            // Update the state so the player can cross the bridge
+            playerState.visitedSmallCastle = true;
+          } else {
+            throw new Error("Submission failed.");
           }
+        } catch (error) {
+          console.error("Submission Error:", error);
+          submitButton.disabled = false;
+          submitButton.innerText = "SUBMISSION FAILED! Try again.";
+          alert(
+            "Submission failed. Check the console for details or try again."
+          );
+        }
       }
 
       function playNodeMusic(src, loop = false) {
