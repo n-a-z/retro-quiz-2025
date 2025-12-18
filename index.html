@@ -480,28 +480,34 @@
       /* --- INPUT --- */
       const keys = {};
       window.addEventListener("keydown", (e) => {
-        if (!e.key) return; // Safely exit if no key property is available
+        if (!e.key) return; 
 
         const key = e.key.toLowerCase();
-        keys[key] = true;
+        
+        // NEW: Check if the user is currently typing in an input or textarea
+        const isTyping = document.activeElement.tagName === 'INPUT' || 
+                        document.activeElement.tagName === 'TEXTAREA';
 
-        // 1. Handle Initial Name Popup: If it's visible, only allow ENTER to start the game and then STOP
+        // Prevent game keys (like space) from firing if typing, 
+        // but still allow the key to be recorded for the movement system if not typing
+        if (!isTyping) {
+          keys[key] = true;
+        }
+
         if (initialNamePopup.style.display !== "none") {
           if (key === "enter") {
             startGameButton.click();
           }
-          return; // Block all other input/movement processing until the game starts
+          return; 
         }
 
-        // 2. Handle Game Interaction (Popup open/close/trigger)
-        // This allows interaction keys to work even when playerState.movementLocked is true
-        // (which is the case when you first arrive at a question node).
-        if (key === "enter" || key === " ") handleInteraction();
+        // UPDATED: Only handle game interaction if NOT typing, OR if the key is Enter 
+        // (Enter is often used to submit, but Space should definitely be blocked)
+        if ((key === "enter" || key === " ") && !isTyping) {
+            handleInteraction();
+        }
+        
         if (key === "escape") closePopup();
-
-        // 3. Handle Movement (Movement is processed in the game loop based on keys state)
-        // We don't need to add any more logic here, as the playerState.movementLocked
-        // check in movePlayer() handles movement restriction.
       });
 
       window.addEventListener("keyup", (e) => {
